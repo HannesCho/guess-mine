@@ -2,7 +2,7 @@ import { join } from "path";
 import express from "express";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import * as socketIO from "socket.io";
+import { Server } from "socket.io";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -17,4 +17,6 @@ app.get("/", (req, res) => res.render("home"));
 const handleListening = () =>
   console.log(`✅ Server running: http://localhost:${PORT}`);
 
-app.listen(PORT, handleListening);
+const server = app.listen(PORT, handleListening);
+
+const io = new Server(server);
