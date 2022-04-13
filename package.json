@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev:server": "nodemon --exec babel-node src/server",
-    "build:styles": "gulp styles"
+    "dev:assets": "gulp"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,8 @@
   "dependencies": {
     "express": "^4.17.3",
     "gulp": "^4.0.2",
+    "gulp-autoprefixer": "^8.0.0",
+    "gulp-csso": "^4.0.1",
     "gulp-sass": "^5.1.0",
     "morgan": "^1.10.0",
     "node-sass": "^7.0.1",
