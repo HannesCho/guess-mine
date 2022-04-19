@@ -129,7 +129,7 @@ exports.handleDisconnected = handleDisconnected;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.handleStrokedPath = exports.handleBeganPath = void 0;
+exports.handleStrokedPath = exports.handleFilled = exports.handleBeganPath = void 0;
 
 var _sockets = require("./sockets");
 
@@ -149,13 +149,13 @@ ctx.lineWidth = 2.5;
 var painting = false;
 var filling = false;
 
-function stopPainting() {
+var stopPainting = function stopPainting() {
   painting = false;
-}
+};
 
-function startPainting() {
+var startPainting = function startPainting() {
   painting = true;
-}
+};
 
 var beginPath = function beginPath(x, y) {
   ctx.beginPath();
@@ -163,11 +163,19 @@ var beginPath = function beginPath(x, y) {
 };
 
 var strokePath = function strokePath(x, y) {
+  var color = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+  var currentColor = ctx.strokeStyle;
+
+  if (color !== null) {
+    ctx.strokeStyle = color;
+  }
+
   ctx.lineTo(x, y);
   ctx.stroke();
+  ctx.strokeStyle = currentColor;
 };
 
-function onMouseMove(event) {
+var onMouseMove = function onMouseMove(event) {
   var x = event.offsetX;
   var y = event.offsetY;
 
@@ -181,18 +189,19 @@ function onMouseMove(event) {
     strokePath(x, y);
     (0, _sockets.getSocket)().emit(window.events.strokePath, {
       x: x,
-      y: y
+      y: y,
+      color: ctx.strokeStyle
     });
   }
-}
+};
 
-function handleColorClick(event) {
+var handleColorClick = function handleColorClick(event) {
   var color = event.target.style.backgroundColor;
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
-}
+};
 
-function handleModeClick() {
+var handleModeClick = function handleModeClick() {
   if (filling === true) {
     filling = false;
     mode.innerText = "Fill";
@@ -200,17 +209,32 @@ function handleModeClick() {
     filling = true;
     mode.innerText = "Paint";
   }
-}
+};
 
-function handleCanvasClick() {
-  if (filling) {
-    ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+var fill = function fill() {
+  var color = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+  var currentColor = ctx.fillStyle;
+
+  if (color !== null) {
+    ctx.fillStyle = color;
   }
-}
 
-function handleCM(event) {
+  ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+  ctx.fillStyle = currentColor;
+};
+
+var handleCanvasClick = function handleCanvasClick() {
+  if (filling) {
+    fill();
+    (0, _sockets.getSocket)().emit(window.events.fill, {
+      color: ctx.fillStyle
+    });
+  }
+};
+
+var handleCM = function handleCM(event) {
   event.preventDefault();
-}
+};
 
 if (canvas) {
   canvas.addEventListener("mousemove", onMouseMove);
@@ -239,11 +263,19 @@ exports.handleBeganPath = handleBeganPath;
 
 var handleStrokedPath = function handleStrokedPath(_ref2) {
   var x = _ref2.x,
-      y = _ref2.y;
-  return strokePath(x, y);
+      y = _ref2.y,
+      color = _ref2.color;
+  return strokePath(x, y, color);
 };
 
 exports.handleStrokedPath = handleStrokedPath;
+
+var handleFilled = function handleFilled(_ref3) {
+  var color = _ref3.color;
+  return fill(color);
+};
+
+exports.handleFilled = handleFilled;
 
 },{"./sockets":6}],6:[function(require,module,exports){
 "use strict";
@@ -251,7 +283,7 @@ exports.handleStrokedPath = handleStrokedPath;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.updateSocket = exports.initSockets = exports.getSocket = void 0;
+exports.initSockets = exports.getSocket = void 0;
 
 var _notifications = require("./notifications");
 
@@ -267,21 +299,16 @@ var getSocket = function getSocket() {
 
 exports.getSocket = getSocket;
 
-var updateSocket = function updateSocket(aSocket) {
-  return socket = aSocket;
-};
-
-exports.updateSocket = updateSocket;
-
 var initSockets = function initSockets(aSocket) {
   var _window = window,
       events = _window.events;
-  updateSocket(aSocket);
-  aSocket.on(events.newUser, _notifications.handleNewUser);
-  aSocket.on(events.disconnected, _notifications.handleDisconnected);
-  aSocket.on(events.newMsg, _chat.handleNewMessage);
-  aSocket.on(events.beganPath, _paint.handleBeganPath);
-  aSocket.on(events.strokedPath, _paint.handleStrokedPath);
+  socket = aSocket;
+  socket.on(events.newUser, _notifications.handleNewUser);
+  socket.on(events.disconnected, _notifications.handleDisconnected);
+  socket.on(events.newMsg, _chat.handleNewMessage);
+  socket.on(events.beganPath, _paint.handleBeganPath);
+  socket.on(events.strokedPath, _paint.handleStrokedPath);
+  socket.on(events.filled, _paint.handleFilled);
 };
 
 exports.initSockets = initSockets;
