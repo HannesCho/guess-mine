@@ -4,7 +4,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.handleNewMessage = void 0;
+exports.handleNewMessage = exports.enableChat = exports.disableChat = void 0;
 
 var _sockets = require("./sockets");
 
@@ -39,6 +39,18 @@ exports.handleNewMessage = handleNewMessage;
 if (sendMsg) {
   sendMsg.addEventListener("submit", handleSendMsg);
 }
+
+var disableChat = function disableChat() {
+  return sendMsg.style.display = "none";
+};
+
+exports.disableChat = disableChat;
+
+var enableChat = function enableChat() {
+  return sendMsg.style.display = "flex";
+};
+
+exports.enableChat = enableChat;
 
 },{"./sockets":7}],2:[function(require,module,exports){
 "use strict";
@@ -290,13 +302,13 @@ var enableCanvas = function enableCanvas() {
 exports.enableCanvas = enableCanvas;
 
 var hideControls = function hideControls() {
-  return controls.style.opacity = 0;
+  return controls.style.display = "none";
 };
 
 exports.hideControls = hideControls;
 
 var showControls = function showControls() {
-  return controls.style.opacity = 1;
+  return controls.style.display = "flex";
 };
 
 exports.showControls = showControls;
@@ -318,14 +330,17 @@ if (canvas) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.handlePlayerUpdate = exports.handleLeaderNotif = exports.handleGameStarted = exports.handleGameEnded = void 0;
+exports.handlePlayerUpdate = exports.handleLeaderNotif = exports.handleGameStarting = exports.handleGameStarted = exports.handleGameEnded = void 0;
 
 var _paint = require("./paint");
+
+var _chat = require("./chat");
 
 var board = document.getElementById("jsPBoard");
 var notifs = document.getElementById("jsNotifs");
 
 var addPlayers = function addPlayers(players) {
+  console.log(players);
   board.innerHTML = "";
   players.forEach(function (player) {
     var playerElement = document.createElement("span");
@@ -358,6 +373,7 @@ var handleLeaderNotif = function handleLeaderNotif(_ref2) {
   var word = _ref2.word;
   (0, _paint.enableCanvas)();
   (0, _paint.showControls)();
+  (0, _chat.disableChat)();
   notifs.innerText = "You are the leader, paint: ".concat(word);
 };
 
@@ -372,7 +388,13 @@ var handleGameEnded = function handleGameEnded() {
 
 exports.handleGameEnded = handleGameEnded;
 
-},{"./paint":5}],7:[function(require,module,exports){
+var handleGameStarting = function handleGameStarting() {
+  return setNotifs("Game will start soon");
+};
+
+exports.handleGameStarting = handleGameStarting;
+
+},{"./chat":1,"./paint":5}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -410,6 +432,7 @@ var initSockets = function initSockets(aSocket) {
   socket.on(events.gameStarted, _players.handleGameStarted);
   socket.on(events.leaderNotif, _players.handleLeaderNotif);
   socket.on(events.gameEnded, _players.handleGameEnded);
+  socket.on(events.handleGameStarting, _players.handleGameStarting);
 };
 
 exports.initSockets = initSockets;
